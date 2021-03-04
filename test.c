@@ -2,25 +2,26 @@
 #include <stdlib.h> // For exit() 
 
 int main() 
-{ 
-	FILE *fptr; 
-
-	char filename[100];
-	int c; 
-
-	printf("Enter the filename to open \n"); 
-	scanf("%s", filename); 
-	fflush(stdin);
-	// Open file 
-	fptr = fopen(filename, "w"); 
-	if (fptr == NULL) 
-	{ 
-		printf("Cannot open file \n"); 
-		exit(0); 
-	} 
-	char buff[100];
-	fgets(buff,99,stdin);
-	fputs(buff,fptr);
-	fclose(fptr); 
+{
+	FILE *fptr2;
+	fptr2 = fopen("temp","w");
+	char c;
+	c = fgetc(fptr);
+	int cnt =0,n=0;
+	char messagebuffer[200];
+	while(cnt < 3){
+		if(c == '#'){
+			cnt++;
+		}
+		messagebuffer[n]=c;
+		n++;
+		if(cnt != 3){
+			c = fgetc(fptr);
+		}
+	}
+	mesasgebuffer[n] = '\0';
+	fputs(messagebuffer,fptr2);
+	fclose(fptr);
+	fclose(fptr2);
 	return 0; 
 }
