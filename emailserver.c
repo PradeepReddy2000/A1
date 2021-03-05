@@ -33,39 +33,35 @@ int check(char user_id[],int flg){
 	return 0;
 }
 
-void LSTU(int sockfd){
-		char buff[MAX] = "";
+void LSTU(){
 		for(int i=0;i<user_pointer-1;i++){
-			strcat(buff,user_list[i].name);
-			strcat(buff," ");
+			printf("%s ",user_list[i].name);
 		}
-		strcat(buff,user_list[user_pointer-1].name);
-		strcat(buff,"\n");
-		write(sockfd,buff,sizeof(buff));
+		printf("%s\n",user_list[user_pointer-1].name);
 }
 
-void ADDU(int sockfd){
+void ADDU(){
 	char user_id[MAX_USER_LENGTH];
-	char buff[MAX]="";
-	read(sockfd,user_id,sizeof(user_id));
+	scanf("%s",user_id);
 	if(check(user_id,0) == 1){
-		strcpy(buff,"Userid Already present\n");
+		printf("Userid Already present\n");
 	}
+	
 	else{
 		// add new user to user_list
 		strcpy(user_list[user_pointer].name,user_id);
 		user_list[user_pointer].number_of_mails =0;
 		user_pointer++;
-		strcpy(buff,"Created ");
-		strcat(buff,user_list[user_pointer-1].name);
+		printf("Created ");
+		printf("%s\n",user_list[user_pointer-1].name);
 		FILE *fptr;
 		fptr = fopen(user_id,"w");
 		fclose(fptr);
 	}
-	write(sockfd,buff,sizeof(buff));
+	
 }
 
-void usercommand(int sockfd){
+void usercommand(){
 	
 	char current_user_id[MAX_USER_LENGTH];
 	scanf("%s",current_user_id);
@@ -84,7 +80,7 @@ void usercommand(int sockfd){
 			
 			printf("Enter User-Commad: ");
 			char buff[MAX];
-			
+			scanf("%s",buff);
 			if(strcmp(buff,"READM") == 0){
 				
 				int num_mails = user_list[check_num-1].number_of_mails;
@@ -100,16 +96,17 @@ void usercommand(int sockfd){
 				
 				// open file and precess till currentptr number of mails.
 				FILE *curr_fptr;
-				FILE *temp_fptr;
+				// FILE *temp_fptr;
 				
 				curr_fptr = fopen(current_user_id,"r");
-				temp_fptr = fopen("temp","w");
+				// temp_fptr = fopen("temp","w");
 				
 				char c;
 				int cnt =0;
 				for(int i=0;i<currentptr;i++){
 					// dont need these strings
 					cnt =0;
+					c = fgetc(curr_fptr);
 					c = fgetc(curr_fptr);
 					while( cnt < 3){
 						if(c == '#'){
@@ -126,7 +123,7 @@ void usercommand(int sockfd){
 				char messagebuffer[200];
 				cnt=0;
 				if(currentptr != 0)
-					c = fgetc(curr_fptr); // to absorb new line.
+				c = fgetc(curr_fptr); // to absorb new line.
 				c = fgetc(curr_fptr);
 				while( cnt < 3){
 					
@@ -142,18 +139,78 @@ void usercommand(int sockfd){
 					}
 					
 				}
-				
 				messagebuffer[n] = '\n';
 				n++;
-				
-				fputs(messagebuffer,temp_fptr);
-				fclose(temp_fptr);
+				messagebuffer[n] = '\0';
+				printf("%s",messagebuffer);
+				// fputs(messagebuffer,temp_fptr);
+				// fclose(temp_fptr);
 				fclose(curr_fptr);
 				currentptr++;
 			}
 			
 			else if(strcmp(buff,"DELM") == 0){
+				int num_mails = user_list[check_num-1].number_of_mails;
 				
+				if(num_mails == 0){
+					printf("No More Mail");
+					continue;
+				}
+				
+				else if(currentptr == num_mails){
+					currentptr =0;
+				}
+				
+				FILE *curr_fptr;
+				FILE *fptr2;
+				
+				curr_fptr = fopen(current_user_id,"r");
+				fptr2 = fopen("temp.txt","w");
+				
+				int target = currentptr;
+				for(int i=0;i<num_mails;i++){
+					int n=0;
+					char messagebuffer[200],c;
+					int cnt=0;
+					if(i != 0)
+					 c = fgetc(curr_fptr);
+					 c = fgetc(curr_fptr);
+					while( cnt < 3){
+						
+						if(c == '#'){
+							cnt++;
+						}
+						
+						messagebuffer[n]=c;
+						n++;
+						
+						if(cnt != 3){
+							c = fgetc(curr_fptr);
+						}
+						
+					}
+
+					messagebuffer[n] = '\n';
+					n++;
+					messagebuffer[n] = '\0';
+					if(i != target)
+					fputs(messagebuffer,fptr2);
+				}
+				fclose(curr_fptr);
+				fclose(fptr2);
+				user_list[check_num-1].number_of_mails--;
+				if(remove(current_user_id) == 0){
+					printf("sucessfully removed.\n");
+				}
+				else{
+					printf("unable to delete.\n");
+				}
+				if(rename("temp.txt",current_user_id) == 0){
+					printf("sucessfully changed.\n");
+				}
+				else{
+					printf("unable to change.\n");
+				}
 			}
 			
 			else if(strcmp(buff,"SEND") == 0){
@@ -214,21 +271,20 @@ void usercommand(int sockfd){
 	
 }
 
-void command_processor(int sockfd)
+void command_processor()
 {
-		char buff[MAX];
 		while(1 < 2){
-			bzero(buff,MAX);
-			read(sockfd,buff,sizeof(buff));
-			puts(buff);
+			char buff[MAX];
+			printf("Enter Command :");
+			scanf("%s",buff);
 			if(strncmp("LSTU",buff,4) == 0){
-				LSTU(sockfd);
+				LSTU();
 			}	
 			else if(strncmp("ADDU",buff,4) == 0){
-				ADDU(sockfd);
+				ADDU();
 			}
 			else if(strncmp("USER",buff,4) == 0){
-				usercommand(sockfd);
+				usercommand();
 			}
 			else if(strncmp("QUIT",buff,4) == 0){
 				break;
@@ -237,54 +293,6 @@ void command_processor(int sockfd)
 }
 
 int main(){
-	int sockfd, connfd, len; 
-	struct sockaddr_in servaddr, cli; 
-
-	// socket create and verification 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-	if (sockfd == -1) { 
-		printf("socket creation failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Socket successfully created..\n"); 
-	bzero(&servaddr, sizeof(servaddr)); 
-
-	// assign IP, PORT 
-	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servaddr.sin_port = htons(PORT); 
-
-	// Binding newly created socket to given IP and verification 
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-		printf("socket bind failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Socket successfully binded..\n"); 
-
-	// Now server is ready to listen and verification 
-	if ((listen(sockfd, 5)) != 0) { 
-		printf("Listen failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("Server listening..\n"); 
-	len = sizeof(cli); 
-
-	// Accept the data packet from client and verification 
-	connfd = accept(sockfd, (SA*)&cli, &len); 
-	if (connfd < 0) { 
-		printf("server acccept failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("server acccept the client...\n"); 
-
-	// function for chat 
-	command_processor(sockfd);
-	// close the socket 
-	close(sockfd); 
-	
+	command_processor();
 }
 

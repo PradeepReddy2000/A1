@@ -39,6 +39,7 @@ void command_processor(int sockfd){
 		printf("Main-prompt> ");
 		scanf("%s",buff);
 		if(strcmp(buff,"Listusers") == 0){
+			bzero(buff,MAX);
 			strcpy(buff,"LSTU");
 			write(sockfd, buff, sizeof(buff)); 
 			bzero(buff, sizeof(buff)); 
@@ -69,6 +70,19 @@ void command_processor(int sockfd){
 	}
 }
 
+void func(int sockfd){
+	char buff[MAX];
+	printf("correctly 1");
+	bzero(buff,MAX);
+	printf("correctly 2");
+	read(sockfd,buff,sizeof(buff));
+	puts("read from server\n");
+	printf("%s",buff);
+	bzero(buff,MAX);
+	strcpy(buff,"server");
+	write(sockfd,buff,sizeof(buff));
+}
+
 int main(){
 		int sockfd, connfd; 
 	struct sockaddr_in servaddr, cli; 
@@ -95,6 +109,7 @@ int main(){
 	} 
 	else
 		printf("connected to the server..\n"); 
-	command_processor(sockfd);
+	// command_processor(sockfd);
+	func(sockfd);
 	close(sockfd);
 }
